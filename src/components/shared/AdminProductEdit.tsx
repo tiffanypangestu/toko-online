@@ -12,6 +12,7 @@ import { Input } from '../ui/Input';
 import { Textarea } from '../ui/Textarea';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import { ChevronLeft, Save, Upload, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
 
 interface AdminProductEditProps {
@@ -301,11 +302,12 @@ export function AdminProductEdit({ productId }: AdminProductEditProps) {
             {/* Image Preview Box */}
             <div className="md:col-span-4 flex items-center justify-center border border-slate-800 bg-slate-950 rounded-lg h-24 overflow-hidden relative">
               {imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={imageUrl}
                   alt="Preview"
-                  className="h-full w-full object-cover"
+                  fill
+                  className="object-cover"
+                  unoptimized
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-slate-600">

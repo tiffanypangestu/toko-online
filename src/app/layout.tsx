@@ -12,10 +12,30 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Toko Online',
-  description: 'Aplikasi E-Commerce menggunakan Next.js',
+  title: {
+    default: 'Toko Online MVP | E-Commerce Modern',
+    template: '%s | Toko Online',
+  },
+  description: 'Temukan produk teknologi pilihan terbaik di Toko Online MVP. Transaksi mudah, cepat, dan aman.',
   icons: {
     icon: '/favicon.ico',
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Toko Online MVP | E-Commerce Modern',
+    description: 'Temukan produk teknologi pilihan terbaik di Toko Online MVP.',
+    url: '/',
+    siteName: 'Toko Online',
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Toko Online MVP | E-Commerce Modern',
+    description: 'Temukan produk teknologi pilihan terbaik di Toko Online MVP.',
   },
 };
 
