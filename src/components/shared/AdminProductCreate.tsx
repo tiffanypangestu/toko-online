@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createProduct } from '@/services/product.service';
+import { createAuditLog } from '@/services/audit.service';
 import { storage } from '@/firebase/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { generateSlug } from '@/utils/generateSlug';
@@ -101,7 +102,16 @@ export function AdminProductCreate() {
         updatedAt: new Date().toISOString(),
       };
 
-      await createProduct(finalProduct);
+      const newProductId = await createProduct(finalProduct);
+      
+      // Record Audit Log
+      await createAuditLog({
+        action: 'PRODUCT_CREATE',
+        user: 'admin@example.com',
+        ipAddress: 'client-browser',
+        description: `Membuat produk baru: ${finalProduct.name} (ID: ${newProductId})`,
+      });
+
       toast.success('Produk berhasil ditambahkan.');
       router.push('/admin/products');
       router.refresh();

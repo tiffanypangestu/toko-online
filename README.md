@@ -74,28 +74,8 @@ npm run start
 1. Buat proyek baru di [Firebase Console](https://console.firebase.google.com/).
 2. Aktifkan **Cloud Firestore** dan **Firebase Storage**.
 3. Buat Web App pada setelan proyek untuk mendapatkan kredensial Firebase SDK.
-4. Set Firestore Security Rules:
-   ```javascript
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /{document=**} {
-         allow read, write: if true; // Sesuaikan rules untuk kebutuhan production
-       }
-     }
-   }
-   ```
-5. Set Storage Security Rules:
-   ```javascript
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /{allPaths=**} {
-         allow read, write: if true; // Sesuaikan rules untuk kebutuhan production
-       }
-     }
-   }
-   ```
+4. Set Firestore Security Rules menggunakan file `firestore.rules` di root folder.
+5. Set Storage Security Rules menggunakan file `storage.rules` di root folder.
 
 ### 2. Midtrans Sandbox
 1. Daftar/masuk ke [Dashboard Midtrans](https://dashboard.midtrans.com/) (pilih mode **Sandbox**).
@@ -127,6 +107,21 @@ MIDTRANS_SERVER_KEY=your_server_key
 NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=your_client_key
 MIDTRANS_IS_PRODUCTION=false
 ```
+
+---
+
+## Backup & Export Firestore Database
+
+Untuk mencadangkan atau melakukan ekspor data koleksi Firestore ke format JSON lokal:
+1. Unduh file kunci akun layanan (Service Account Key) di *Firebase Console > Project Settings > Service accounts*.
+2. Simpan file JSON tersebut di tempat yang aman.
+3. Tambahkan environment variable:
+   `export FIREBASE_SERVICE_ACCOUNT_PATH="/path/to/service-account.json"`
+4. Jalankan script ekspor:
+   ```bash
+   node scripts/exportCollection.js
+   ```
+5. File ekspor akan disimpan di folder `backups/` di root proyek.
 
 ---
 

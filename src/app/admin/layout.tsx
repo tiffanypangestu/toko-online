@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { createAuditLog } from '@/services/audit.service';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -59,11 +60,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // Clear session cookie client-side
     document.cookie = 'admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     toast.success('Logout berhasil.');
     
+    // Record Audit Log
+    await createAuditLog({
+      action: 'ADMIN_LOGOUT',
+      user: 'admin@example.com',
+      ipAddress: 'client-browser',
+      description: 'Super admin logout success',
+    });
+
     // Redirect to login
     router.push('/admin/login');
     router.refresh();

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { db, isFirebaseConfigured } from '@/firebase/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { deleteProduct } from '@/services/product.service';
+import { createAuditLog } from '@/services/audit.service';
 import { Product } from '@/types/product';
 import { formatRupiah } from '@/utils/format';
 import { Button } from '@/components/ui/Button';
@@ -70,6 +71,15 @@ export default function AdminProductsPage() {
 
     try {
       await deleteProduct(id);
+
+      // Record Audit Log
+      await createAuditLog({
+        action: 'PRODUCT_DELETE',
+        user: 'admin@example.com',
+        ipAddress: 'client-browser',
+        description: `Menghapus produk: ${name} (ID: ${id})`,
+      });
+
       toast.success(`Produk "${name}" berhasil dihapus.`);
     } catch (err) {
       console.error('Error deleting product:', err);

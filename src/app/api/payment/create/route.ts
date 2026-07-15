@@ -1,104 +1,115 @@
 import { NextResponse } from 'next/server';
 import { snap } from '@/lib/payment/midtrans';
 import { getOrderByOrderId, updateOrder } from '@/services/order.service';
+import { createAuditLog } from '@/services/audit.service';
+import { isRateLimited } from '@/utils/rateLimit';
+import * as z from 'zod';
 
-interface CheckoutItem {
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  subtotal: number;
-}
-
-interface CustomerInfo {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  province: string;
-  postalCode: string;
-}
+// Define request validation schema using Zod
+const createPaymentSchema = z.object({
+  orderId: z.string().min(1, { message: 'orderId wajib diisi' }),
+  customer: z.object({
+    name: z.string().min(3),
+    email: z.string().email(),
+    phone: z.string().min(10),
+    address: z.string().min(15),
+    city: z.string().min(1),
+    province: z.string().min(1),
+    postalCode: z.string().length(5),
+  }),
+  items: z.array(
+    z.object({
+      productId: z.string().min(1),
+      name: z.string().min(1),
+      price: z.number().positive(),
+      quantity: z.number().int().positive(),
+      subtotal: z.number().positive(),
+    })
+  ).min(1),
+  subtotal: z.number().nonnegative(),
+  shipping: z.number().nonnegative(),
+  discount: z.number().nonnegative(),
+  grandTotal: z.number().positive(),
+});
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { orderId, customer, items, subtotal, shipping, discount, grandTotal } = body;
-
-    // Validation
-    if (
-      !orderId ||
-      !customer ||
-      !items ||
-      typeof subtotal === 'undefined' ||
-      typeof shipping === 'undefined' ||
-      typeof discount === 'undefined' ||
-      typeof grandTotal === 'undefined'
-    ) {
+    // 1. Enforce Rate Limiting
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown-ip';
+    if (isRateLimited(ip, 10)) {
+      console.warn(`Rate limit exceeded for IP: ${ip} on create transaction.`);
       return NextResponse.json(
-        { error: 'Bad Request. Seluruh field wajib diisi.' },
+        { error: 'Terlalu banyak permintaan. Silakan coba lagi setelah beberapa saat.' },
+        { status: 429 },
+      );
+    }
+
+    const rawBody = await request.json();
+    
+    // 2. Validate request payload using Zod schema
+    const validationResult = createPaymentSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      const errorMsg = validationResult.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
+      return NextResponse.json(
+        { error: `Bad Request. Validasi gagal: ${errorMsg}` },
         { status: 400 },
       );
     }
 
-    const customerInfo = customer as CustomerInfo;
-    const checkoutItems = items as CheckoutItem[];
+    const { orderId, customer, items, shipping, discount, grandTotal } = validationResult.data;
 
-    // Map checkout items to Midtrans snap payload format
-    const itemDetails = checkoutItems.map((item) => ({
+    // Map items to Midtrans snap format
+    const itemDetails = items.map((item) => ({
       id: item.productId,
-      price: Number(item.price),
-      quantity: Number(item.quantity),
-      name: item.name.substring(0, 50), // Midtrans limits item name length to 50
+      price: item.price,
+      quantity: item.quantity,
+      name: item.name.substring(0, 50),
     }));
 
-    // Add shipping cost as a virtual item line
-    if (Number(shipping) > 0) {
+    if (shipping > 0) {
       itemDetails.push({
         id: 'shipping-fee',
-        price: Number(shipping),
+        price: shipping,
         quantity: 1,
         name: 'Ongkos Kirim',
       });
     }
 
-    // Add voucher discount as a negative virtual item line
-    if (Number(discount) > 0) {
+    if (discount > 0) {
       itemDetails.push({
         id: 'discount-voucher',
-        price: -Number(discount),
+        price: -discount,
         quantity: 1,
         name: 'Potongan Voucher',
       });
     }
 
-    // Configure Midtrans Transaction payload
     const parameter = {
       transaction_details: {
         order_id: orderId,
-        gross_amount: Number(grandTotal),
+        gross_amount: grandTotal,
       },
       item_details: itemDetails,
       customer_details: {
-        first_name: customerInfo.name,
-        email: customerInfo.email,
-        phone: customerInfo.phone,
+        first_name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
         billing_address: {
-          first_name: customerInfo.name,
-          email: customerInfo.email,
-          phone: customerInfo.phone,
-          address: customerInfo.address,
-          city: customerInfo.city,
-          postal_code: customerInfo.postalCode,
+          first_name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+          city: customer.city,
+          postal_code: customer.postalCode,
           country_code: 'IDN',
         },
         shipping_address: {
-          first_name: customerInfo.name,
-          email: customerInfo.email,
-          phone: customerInfo.phone,
-          address: customerInfo.address,
-          city: customerInfo.city,
-          postal_code: customerInfo.postalCode,
+          first_name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+          city: customer.city,
+          postal_code: customer.postalCode,
           country_code: 'IDN',
         },
       },
@@ -116,6 +127,14 @@ export async function POST(request: Request) {
         paymentToken: snapResponse.token,
         paymentUrl: snapResponse.redirect_url,
         paymentMethod: 'MIDTRANS',
+      });
+
+      // Write Audit Log
+      await createAuditLog({
+        action: 'ORDER_CHECKOUT',
+        user: customer.email,
+        ipAddress: ip,
+        description: `Melakukan checkout order ${orderId} dengan total pembayaran ${grandTotal}`,
       });
     } else {
       console.warn(`Order document with Order ID ${orderId} was not found in Firestore.`);

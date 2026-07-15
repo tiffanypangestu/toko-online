@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { createAuditLog } from '@/services/audit.service';
 import { ShieldAlert, KeyRound, Mail } from 'lucide-react';
 
 export default function AdminLoginPage() {
@@ -18,7 +19,7 @@ export default function AdminLoginPage() {
     setMounted(true);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -38,6 +39,14 @@ export default function AdminLoginPage() {
       // Set session cookie client-side
       document.cookie = `admin_session=true; path=/; max-age=${maxAge}; SameSite=Strict`;
       
+      // Record Audit Log
+      await createAuditLog({
+        action: 'ADMIN_LOGIN',
+        user: email.trim(),
+        ipAddress: 'client-browser',
+        description: 'Super admin login success',
+      });
+
       // Redirect to dashboard
       setTimeout(() => {
         router.push('/admin/dashboard');

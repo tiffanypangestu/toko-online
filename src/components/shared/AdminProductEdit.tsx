@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getProductById, updateProduct } from '@/services/product.service';
+import { createAuditLog } from '@/services/audit.service';
 import { storage } from '@/firebase/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { generateSlug } from '@/utils/generateSlug';
@@ -136,6 +137,15 @@ export function AdminProductEdit({ productId }: AdminProductEditProps) {
       };
 
       await updateProduct(productId, updatedProduct);
+      
+      // Record Audit Log
+      await createAuditLog({
+        action: 'PRODUCT_UPDATE',
+        user: 'admin@example.com',
+        ipAddress: 'client-browser',
+        description: `Memperbarui produk: ${updatedProduct.name} (ID: ${productId})`,
+      });
+
       toast.success('Produk berhasil diperbarui.');
       router.push('/admin/products');
       router.refresh();
