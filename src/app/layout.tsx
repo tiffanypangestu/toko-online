@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/navigation/Navbar';
 import Footer from '@/components/navigation/Footer';
 import ToastProvider from '@/components/shared/ToastProvider';
+import PWARegister from '@/components/shared/PWARegister';
 import { CartProvider } from '@/context/CartContext';
 
 const inter = Inter({
@@ -19,6 +20,13 @@ export const metadata: Metadata = {
   description: 'Temukan produk teknologi pilihan terbaik di Toko Online MVP. Transaksi mudah, cepat, dan aman.',
   icons: {
     icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'TokoOnline',
+    statusBarStyle: 'default',
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   alternates: {
@@ -54,6 +62,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <ToastProvider />
+          <PWARegister />
         </CartProvider>
       </body>
     </html>
