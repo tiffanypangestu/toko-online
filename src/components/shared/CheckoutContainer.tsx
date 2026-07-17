@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import { createOrder } from '@/services/order.service';
 import { Order, OrderItem } from '@/types/order';
+import { getBalance, deductBalance } from '@/services/balance.service';
 import { Container } from '../layout/Container';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -77,6 +78,7 @@ export function CheckoutContainer() {
   const [mounted, setMounted] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'MIDTRANS' | 'SALDO_TOKO'>('MIDTRANS');
 
   // Set hydration mount check
   useEffect(() => {
@@ -170,6 +172,21 @@ export function CheckoutContainer() {
         subtotal: item.subtotal,
       }));
 
+      const isSaldo = selectedPaymentMethod === 'SALDO_TOKO';
+      const grandTotal = getGrandTotal();
+
+      if (isSaldo) {
+        // Validate user balance
+        const balance = await getBalance(values.email.trim().toLowerCase());
+        if (balance < grandTotal) {
+          toast.error('Saldo Toko Anda tidak mencukupi untuk memesan. Silakan top up saldo terlebih dahulu.');
+          setSubmitting(false);
+          return;
+        }
+        // Deduct balance
+        await deductBalance(values.email.trim().toLowerCase(), grandTotal);
+      }
+
       const newOrder: Omit<Order, 'id'> = {
         orderId: generatedId,
         customerName: sanitizeText(values.customerName),
@@ -184,12 +201,12 @@ export function CheckoutContainer() {
         subtotal: getSubtotal(),
         discount: getDiscountAmount(),
         shippingCost: getShippingFee(),
-        grandTotal: getGrandTotal(),
-        paymentStatus: 'PENDING',
-        paymentMethod: 'MIDTRANS',
+        grandTotal: grandTotal,
+        paymentStatus: isSaldo ? 'PAID' : 'PENDING',
+        paymentMethod: isSaldo ? 'SALDO_TOKO' : 'MIDTRANS',
         paymentToken: '',
         paymentUrl: '',
-        transactionId: '',
+        transactionId: isSaldo ? `SALDO-${generatedId}` : '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -197,43 +214,63 @@ export function CheckoutContainer() {
       // 1. Save order inside Firestore orders collection
       const docId = await createOrder(newOrder);
 
-      // 2. Request Midtrans Snap Transaction details from API Route
-      const response = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: generatedId,
-          customer: {
-            name: newOrder.customerName,
-            email: newOrder.email,
-            phone: newOrder.phone,
-            address: newOrder.address,
-            city: newOrder.city,
-            province: newOrder.province,
-            postalCode: newOrder.postalCode,
+      let savedOrder: Order;
+
+      if (isSaldo) {
+        savedOrder = {
+          ...newOrder,
+          id: docId,
+        };
+        clearCart();
+        toast.success('Pembayaran sukses menggunakan Saldo Toko!');
+        
+        // Refresh local balance in window if it matches
+        if (typeof window !== 'undefined') {
+          const currentEmail = localStorage.getItem('wallet_email') || 'customer@example.com';
+          if (currentEmail.trim().toLowerCase() === values.email.trim().toLowerCase()) {
+            // Dispatch a storage event or simply reload navbar by state (will refresh on next navigation or refresh)
+            window.dispatchEvent(new Event('storage'));
+          }
+        }
+      } else {
+        // 2. Request Midtrans Snap Transaction details from API Route
+        const response = await fetch('/api/payment/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          items: newOrder.items,
-          subtotal: newOrder.subtotal,
-          shipping: newOrder.shippingCost,
-          discount: newOrder.discount,
-          grandTotal: newOrder.grandTotal,
-        }),
-      });
+          body: JSON.stringify({
+            orderId: generatedId,
+            customer: {
+              name: newOrder.customerName,
+              email: newOrder.email,
+              phone: newOrder.phone,
+              address: newOrder.address,
+              city: newOrder.city,
+              province: newOrder.province,
+              postalCode: newOrder.postalCode,
+            },
+            items: newOrder.items,
+            subtotal: newOrder.subtotal,
+            shipping: newOrder.shippingCost,
+            discount: newOrder.discount,
+            grandTotal: newOrder.grandTotal,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Gagal menghubungi API Pembayaran Midtrans Snap.');
+        if (!response.ok) {
+          throw new Error('Gagal menghubungi API Pembayaran Midtrans Snap.');
+        }
+
+        const paymentData = await response.json();
+
+        savedOrder = {
+          ...newOrder,
+          id: docId,
+          paymentToken: paymentData.token,
+          paymentUrl: paymentData.redirectUrl,
+        };
       }
-
-      const paymentData = await response.json();
-
-      const savedOrder: Order = {
-        ...newOrder,
-        id: docId,
-        paymentToken: paymentData.token,
-        paymentUrl: paymentData.redirectUrl,
-      };
 
       setCreatedOrder(savedOrder);
       toast.success('Pesanan berhasil dibuat.');
@@ -298,10 +335,12 @@ export function CheckoutContainer() {
             </div>
             
             <h1 className="mb-2 text-2xl font-bold text-slate-800">
-              Pesanan Berhasil Dibuat
+              {createdOrder.paymentMethod === 'SALDO_TOKO' ? 'Pembayaran Berhasil!' : 'Pesanan Berhasil Dibuat'}
             </h1>
             <p className="mb-6 text-sm text-slate-500">
-              Terima kasih telah berbelanja di Toko Online. Pesanan Anda telah tersimpan di sistem kami dengan status pembayaran **PENDING**.
+              {createdOrder.paymentMethod === 'SALDO_TOKO' 
+                ? 'Terima kasih telah berbelanja di Toko Online. Pembayaran Anda menggunakan Saldo Toko telah sukses dikonfirmasi.' 
+                : 'Terima kasih telah berbelanja di Toko Online. Pesanan Anda telah tersimpan di sistem kami dengan status pembayaran PENDING.'}
             </p>
 
             {/* Order Invoice Brief info */}
@@ -325,25 +364,40 @@ export function CheckoutContainer() {
             </div>
 
             <div className="space-y-3">
-              <Button
-                onClick={handlePayNow}
-                variant="primary"
-                className="w-full flex items-center justify-center gap-2 font-bold py-3 text-sm"
-              >
-                <CreditCard className="h-4 w-4" />
-                Bayar Sekarang (Midtrans)
-              </Button>
-              <p className="text-[10px] text-slate-400">
-                Pilih tombol di atas untuk membuka popup transaksi Midtrans Snap Sandbox.
-              </p>
-              <div className="pt-4">
-                <Link
-                  href="/products"
-                  className="text-xs font-semibold text-slate-500 hover:text-primary transition-colors"
-                >
-                  Kembali ke Katalog Produk
+              {createdOrder.paymentMethod === 'SALDO_TOKO' ? (
+                <Link href="/products" className="block w-full">
+                  <Button
+                    variant="primary"
+                    className="w-full flex items-center justify-center gap-2 font-bold py-3 text-sm"
+                  >
+                    Kembali Belanja
+                  </Button>
                 </Link>
-              </div>
+              ) : (
+                <>
+                  <Button
+                    onClick={handlePayNow}
+                    variant="primary"
+                    className="w-full flex items-center justify-center gap-2 font-bold py-3 text-sm"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Bayar Sekarang (Midtrans)
+                  </Button>
+                  <p className="text-[10px] text-slate-400">
+                    Pilih tombol di atas untuk membuka popup transaksi Midtrans Snap Sandbox.
+                  </p>
+                </>
+              )}
+              {createdOrder.paymentMethod !== 'SALDO_TOKO' && (
+                <div className="pt-4">
+                  <Link
+                    href="/products"
+                    className="text-xs font-semibold text-slate-500 hover:text-primary transition-colors"
+                  >
+                    Kembali ke Katalog Produk
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </Container>
@@ -500,6 +554,45 @@ export function CheckoutContainer() {
                       {...register('notes')}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-800 border-b border-slate-100 pb-3">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  Metode Pembayaran
+                </h2>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className={`flex items-center gap-3 rounded-lg border p-4 cursor-pointer hover:bg-slate-50 transition-all ${selectedPaymentMethod === 'MIDTRANS' ? 'border-primary bg-blue-50/10' : 'border-slate-200'}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="MIDTRANS"
+                      checked={selectedPaymentMethod === 'MIDTRANS'}
+                      onChange={() => setSelectedPaymentMethod('MIDTRANS')}
+                      className="h-4 w-4 text-primary focus:ring-primary cursor-pointer animate-none"
+                    />
+                    <div>
+                      <span className="block text-xs font-bold text-slate-800">Midtrans Sandbox</span>
+                      <span className="block text-[10px] text-slate-400">QRIS, Transfer Bank, e-Wallet</span>
+                    </div>
+                  </label>
+
+                  <label className={`flex items-center gap-3 rounded-lg border p-4 cursor-pointer hover:bg-slate-50 transition-all ${selectedPaymentMethod === 'SALDO_TOKO' ? 'border-primary bg-blue-50/10' : 'border-slate-200'}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="SALDO_TOKO"
+                      checked={selectedPaymentMethod === 'SALDO_TOKO'}
+                      onChange={() => setSelectedPaymentMethod('SALDO_TOKO')}
+                      className="h-4 w-4 text-primary focus:ring-primary cursor-pointer animate-none"
+                    />
+                    <div>
+                      <span className="block text-xs font-bold text-slate-800">Saldo Toko</span>
+                      <span className="block text-[10px] text-slate-400">Bayar instan menggunakan Saldo Anda</span>
+                    </div>
+                  </label>
                 </div>
               </div>
             </fieldset>

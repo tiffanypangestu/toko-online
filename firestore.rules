@@ -26,5 +26,10 @@ service cloud.firestore {
       allow create: if true;
       allow read: if request.auth != null;
     }
+    
+    // 5. Balances: Public read & write for balance simulation
+    match /balances/{email} {
+      allow read, write: if true;
+    }
   }
 }

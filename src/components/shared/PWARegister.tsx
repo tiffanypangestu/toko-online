@@ -14,57 +14,16 @@ export default function PWARegister() {
       return;
     }
 
-    // 1. Register Service Worker and listen for updates
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('Service Worker registered successfully under scope:', registration.scope);
-
-        // Check for updates periodically
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('Service Worker: New version detected and ready.');
-                setUpdateWaiting(newWorker);
-              }
-            });
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister().then((success) => {
+          if (success) {
+            console.log('Service worker unregistered:', registration.scope);
+            window.location.reload();
           }
         });
-
-        // If a service worker is already waiting in queue
-        if (registration.waiting) {
-          setUpdateWaiting(registration.waiting);
-        }
-      })
-      .catch((err) => {
-        console.error('Service Worker registration failed:', err);
-      });
-
-    // 2. Listen for controller changes to trigger refresh
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
-        refreshing = true;
-        window.location.reload();
       }
     });
-
-    // 3. Add to Home Screen Prompt intercept
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      // Store event
-      setInstallPrompt(e);
-      // Show custom banner
-      setShowInstallBanner(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
   }, []);
 
   // Update App handler

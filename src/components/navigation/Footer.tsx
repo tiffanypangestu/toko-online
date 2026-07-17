@@ -30,22 +30,22 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/products" className="hover:text-white transition-colors">
                   Laptop
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/products" className="hover:text-white transition-colors">
                   Keyboard
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/products" className="hover:text-white transition-colors">
                   Mouse
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/products" className="hover:text-white transition-colors">
                   Headset
                 </Link>
               </li>
@@ -59,22 +59,22 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/about" className="hover:text-white transition-colors">
                   Tentang Kami
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/faq" className="hover:text-white transition-colors">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/privacy" className="hover:text-white transition-colors">
                   Kebijakan Privasi
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white transition-colors">
+                <Link href="/terms" className="hover:text-white transition-colors">
                   Syarat & Ketentuan
                 </Link>
               </li>
