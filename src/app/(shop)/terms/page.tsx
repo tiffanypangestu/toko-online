@@ -40,7 +40,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-lg font-bold text-slate-900 mb-2">2. Transaksi & Harga</h2>
               <p>
-                Harga produk yang tercantum di situs ini adalah akurat dalam mata uang Rupiah (IDR). Kami berhak mengubah harga produk tanpa pemberitahuan terlebih dahulu. Transaksi dianggap sah apabila Anda telah menyelesaikan pembayaran dan status transaksi di sistem kami berubah menjadi "PAID".
+                Harga produk yang tercantum di situs ini adalah akurat dalam mata uang Rupiah (IDR). Kami berhak mengubah harga produk tanpa pemberitahuan terlebih dahulu. Transaksi dianggap sah apabila Anda telah menyelesaikan pembayaran dan status transaksi di sistem kami berubah menjadi &quot;PAID&quot;.
               </p>
             </div>
 

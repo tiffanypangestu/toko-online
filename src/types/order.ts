@@ -23,7 +23,7 @@ export interface Order {
   shippingCost: number;
   grandTotal: number;
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'EXPIRED';
-  paymentMethod: 'MIDTRANS';
+  paymentMethod: 'MIDTRANS' | 'SALDO_TOKO';
   paymentToken: string;
   paymentUrl: string;
   transactionId: string;

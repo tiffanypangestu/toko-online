@@ -51,7 +51,7 @@ export default function PrivacyPage() {
               </p>
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>Memproses transaksi belanja dan mengirimkan produk pesanan Anda.</li>
-                <li>Mengelola saldo ("Saldo Toko") dan transaksi keuangan Anda di platform kami.</li>
+                <li>Mengelola saldo (&quot;Saldo Toko&quot;) dan transaksi keuangan Anda di platform kami.</li>
                 <li>Menghubungi Anda terkait status pengiriman atau konfirmasi pesanan.</li>
                 <li>Menanggapi keluhan, pertanyaan, atau masukan yang Anda kirimkan melalui formulir kontak.</li>
                 <li>Mematuhi kewajiban hukum dan regulasi yang berlaku.</li>

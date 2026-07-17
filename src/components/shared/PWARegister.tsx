@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Download, X, RefreshCw } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 
 export default function PWARegister() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
-  const [updateWaiting, setUpdateWaiting] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
@@ -26,13 +25,6 @@ export default function PWARegister() {
     });
   }, []);
 
-  // Update App handler
-  const handleUpdateApp = () => {
-    if (updateWaiting) {
-      updateWaiting.postMessage({ action: 'skipWaiting' });
-    }
-  };
-
   // Add to Home Screen handler
   const handleInstallApp = async () => {
     if (!installPrompt) return;
@@ -46,23 +38,6 @@ export default function PWARegister() {
 
   return (
     <>
-      {/* 1. App Update Toast Notification */}
-      {updateWaiting && (
-        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:max-w-sm bg-slate-900 border border-slate-800 text-white p-4 rounded-xl shadow-2xl flex items-center justify-between gap-4 z-50 animate-in slide-in-from-bottom-5 duration-300">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-semibold text-primary-400">Pembaruan Tersedia</span>
-            <span className="text-[11px] text-slate-400">Versi baru telah tersedia untuk diunduh.</span>
-          </div>
-          <button
-            onClick={handleUpdateApp}
-            className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white font-bold text-[11px] py-1.5 px-3 rounded-lg cursor-pointer transition-all"
-          >
-            <RefreshCw className="h-3 w-3 animate-spin" style={{ animationDuration: '3s' }} />
-            Perbarui Sekarang
-          </button>
-        </div>
-      )}
-
       {/* 2. Add To Home Screen Promo Banner */}
       {showInstallBanner && installPrompt && (
         <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-4 md:max-w-md bg-slate-900 border border-slate-800 text-white p-4 rounded-xl shadow-2xl flex items-center justify-between gap-4 z-50 animate-in slide-in-from-bottom-5 duration-300">
