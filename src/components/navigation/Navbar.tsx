@@ -124,12 +124,7 @@ export function Navbar() {
           >
             Tentang Kami
           </Link>
-          <Link
-            href="/contact"
-            className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-          >
-            Kontak
-          </Link>
+
 
           {/* Saldo tracker */}
           {mounted && (
@@ -207,13 +202,7 @@ export function Navbar() {
             >
               Tentang Kami
             </Link>
-            <Link
-              href="/contact"
-              className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              Kontak
-            </Link>
+
 
             {/* Mobile Cart */}
             <Link
