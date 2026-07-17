@@ -158,14 +158,7 @@ export function Navbar() {
           </Link>
         </nav>
 
-        {/* CTA Button */}
-        <div className="hidden md:block">
-          <Link href="/contact">
-            <Button size="sm" variant="primary">
-              Hubungi Kami
-            </Button>
-          </Link>
-        </div>
+
 
         {/* Mobile menu trigger */}
         <div className="flex items-center gap-3 md:hidden">
@@ -239,11 +232,6 @@ export function Navbar() {
             </Link>
 
             <hr className="border-slate-100" />
-            <Link href="/contact" className="w-full" onClick={() => setIsOpen(false)}>
-              <Button size="sm" className="w-full">
-                Hubungi Kami
-              </Button>
-            </Link>
           </nav>
         </div>
       )}
