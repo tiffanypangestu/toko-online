@@ -14,13 +14,65 @@ import {
 
 const COLLECTION_NAME = 'products';
 
+const dummyProducts: Product[] = [
+  {
+    id: 'dummy-1',
+    name: 'Laptop Gaming ASUS ROG',
+    slug: 'laptop-gaming-asus-rog',
+    category: 'Laptop',
+    price: 18500000,
+    stock: 15,
+    description: 'Laptop gaming dengan prosesor Intel Core i7 dan RTX.',
+    image: 'https://placehold.co/600x600?text=ASUS+ROG',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'dummy-2',
+    name: 'Mechanical Keyboard RGB',
+    slug: 'mechanical-keyboard-rgb',
+    category: 'Keyboard',
+    price: 850000,
+    stock: 40,
+    description: 'Mechanical keyboard switch merah RGB.',
+    image: 'https://placehold.co/600x600?text=Keyboard+RGB',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'dummy-3',
+    name: 'Wireless Mouse Logitech',
+    slug: 'wireless-mouse-logitech',
+    category: 'Mouse',
+    price: 350000,
+    stock: 55,
+    description: 'Wireless mouse ergonomis.',
+    image: 'https://placehold.co/600x600?text=Logitech+Mouse',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'dummy-4',
+    name: 'Gaming Headset HyperX',
+    slug: 'gaming-headset-hyperx',
+    category: 'Headset',
+    price: 1250000,
+    stock: 20,
+    description: 'Headset gaming surround 7.1.',
+    image: 'https://placehold.co/600x600?text=HyperX+Headset',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 /**
  * Fetch all products from Firestore ordered by creation date descending.
  */
 export async function getProducts(): Promise<Product[]> {
   try {
     if (!isFirebaseConfigured || !db) {
-      throw new Error('Firebase Firestore is not configured. Set environment variables.');
+      console.warn('Firebase is not configured. Returning 4 dummy products for demo purposes.');
+      return dummyProducts;
     }
     const productsRef = collection(db, COLLECTION_NAME);
     const q = query(productsRef, orderBy('createdAt', 'desc'));
@@ -54,7 +106,8 @@ export async function getProducts(): Promise<Product[]> {
 export async function getProductById(id: string): Promise<Product | null> {
   try {
     if (!isFirebaseConfigured || !db) {
-      throw new Error('Firebase Firestore is not configured. Set environment variables.');
+      console.warn('Firebase is not configured. Searching in dummy products.');
+      return dummyProducts.find(p => p.id === id) || dummyProducts.find(p => p.slug === id) || null;
     }
     const docRef = doc(db, COLLECTION_NAME, id);
     const docSnap = await getDoc(docRef);

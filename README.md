@@ -1,5 +1,8 @@
 # Toko Online MVP
 
+[![CI Pipeline](https://github.com/yourusername/yourrepo/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/yourrepo/actions/workflows/ci.yml)
+[![Release & Deploy](https://github.com/yourusername/yourrepo/actions/workflows/release.yml/badge.svg)](https://github.com/yourusername/yourrepo/actions/workflows/release.yml)
+
 Sebuah aplikasi E-Commerce (Toko Online) modern, responsive, dan production-ready yang dibangun menggunakan Next.js 15, React 19, TypeScript, dan Tailwind CSS v4. Aplikasi ini terintegrasi dengan Firebase Firestore, Firebase Storage, dan Midtrans Snap Sandbox.
 
 ---

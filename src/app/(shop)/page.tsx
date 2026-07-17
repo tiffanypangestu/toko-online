@@ -54,8 +54,8 @@ export default async function HomePage() {
           <div className="flex items-center justify-center lg:col-span-6">
             <div className="relative aspect-[4/3] w-full max-w-lg overflow-hidden bg-white border border-slate-100 shadow-2xl rounded-2xl">
               <Image
-                src="https://placehold.co/600x450?text=Toko+Online+Illustration"
-                alt="Toko Online Modern"
+                src="/images/hero-illustration.png"
+                alt="Toko Online Modern — Belanja Gadget dan Teknologi"
                 fill
                 className="object-cover"
                 priority
