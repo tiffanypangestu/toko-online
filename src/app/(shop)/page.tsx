@@ -45,9 +45,11 @@ export default async function HomePage() {
                   <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                Hubungi Kami
-              </Button>
+              <Link href="/contact" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full">
+                  Hubungi Kami
+                </Button>
+              </Link>
             </div>
           </div>
 
