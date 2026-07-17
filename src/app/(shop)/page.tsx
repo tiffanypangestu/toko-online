@@ -228,14 +228,16 @@ export default async function HomePage() {
           <p className="mb-8 max-w-xl text-base text-blue-100 leading-relaxed md:text-lg">
             Dapatkan penawaran harga menarik dan nikmati berbagai promo eksklusif untuk gadget serta produk teknologi idaman Anda sekarang.
           </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="flex items-center gap-2 font-bold"
-          >
-            Lihat Semua Produk
-            <ArrowRight className="h-5 w-5" />
-          </Button>
+          <Link href="/products">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="flex items-center gap-2 font-bold"
+            >
+              Lihat Semua Produk
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </Link>
         </Container>
       </section>
     </div>
